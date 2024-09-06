@@ -144,7 +144,7 @@ def collect_and_duplicate_images(source_folders, target_folder):
 
 
 def get_file_hash(file_path):
-    """计算文件的MD5哈希值"""
+    """计算文件的 MD5 哈希值"""
     hash_md5 = hashlib.md5()
     with open(file_path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
