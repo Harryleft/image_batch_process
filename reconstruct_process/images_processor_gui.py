@@ -32,7 +32,7 @@ class ImageProcessorGUI:
             master: Tkinter的主窗口对象。
         """
         self.master = master
-        master.title("图片整理助手")
+        master.title("图片整理小助手")
         self.processor = ImageProcessor()
         self.processor.add_observer(self)
         
