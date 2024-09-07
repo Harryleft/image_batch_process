@@ -23,9 +23,6 @@ def delete_duplicate_images(directory):
     # 获取目录中的所有文件
     files = os.listdir(directory)
 
-    # 用于存储文件大小和名称的字典
-    file_dict = {}
-
     # 正则表达式匹配带有(1)、(2)等标记的文件
     pattern = re.compile(r"^(.+)\(\d+\)(\.[^.]+)$")
 
@@ -55,6 +52,10 @@ def delete_duplicate_images(directory):
 
 
 def main():
+    """
+    主函数
+    :return:
+    """
     # 使用示例
     # directory = r"S:\BaiduNetdiskDownload\"
     directory = r"[你的文件路径]"
