@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import tkinter as tk
-from reconstruct_process.images_processor_gui import ImageProcessorGUI
+from images_processor_gui import ImageProcessorGUI
 
 
 def main():
