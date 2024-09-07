@@ -9,62 +9,29 @@ from PIL import Image
 import piexif
 
 
-class ImageProcessorGUI:
-    def __init__(self, master):
-        self.master = master
-        master.title("图片处理器")
-        master.geometry("600x400")
-
+class ImageProcessor:
+    """
+    图片处理器
+    """
+    def __init__(self):
         self.source_folders = []
         self.target_folder = ""
 
-        # 创建并放置控件
-        self.create_widgets()
-
-    def create_widgets(self):
-        # 源文件夹列表框
-        self.listbox_frame = tk.Frame(self.master)
-        self.listbox_frame.pack(pady=10, padx=10, fill=tk.BOTH, expand=True)
-
-        self.listbox_label = tk.Label(self.listbox_frame, text="源文件夹:")
-        self.listbox_label.pack(anchor=tk.W)
-
-        self.listbox = tk.Listbox(self.listbox_frame)
-        self.listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-        self.scrollbar = tk.Scrollbar(self.listbox_frame, orient=tk.VERTICAL)
-        self.scrollbar.config(command=self.listbox.yview)
-        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-        self.listbox.config(yscrollcommand=self.scrollbar.set)
-
-        # 按钮
-        self.button_frame = tk.Frame(self.master)
-        self.button_frame.pack(pady=10)
-
-        self.add_button = tk.Button(self.button_frame, text="添加文件夹",
-                                    command=self.add_folder)
-        self.add_button.pack(side=tk.LEFT, padx=5)
-
-        self.remove_button = tk.Button(self.button_frame, text="删除文件夹",
-                                       command=self.remove_folder)
-        self.remove_button.pack(side=tk.LEFT, padx=5)
-
-        self.target_button = tk.Button(self.master, text="选择目标文件夹",
-                                       command=self.select_target_folder)
-        self.target_button.pack(pady=5)
-
-        self.process_button = tk.Button(self.master, text="处理图片",
-                                        command=self.process_images)
-        self.process_button.pack(pady=10)
-
     def add_folder(self):
+        """
+        添加文件夹
+        :return:
+        """
         folder = filedialog.askdirectory()
         if folder and folder not in self.source_folders:
             self.source_folders.append(folder)
             self.listbox.insert(tk.END, folder)
 
     def remove_folder(self):
+        """
+        删除文件夹
+        :return:
+        """
         selection = self.listbox.curselection()
         if selection:
             index = selection[0]
@@ -72,12 +39,20 @@ class ImageProcessorGUI:
             del self.source_folders[index]
 
     def select_target_folder(self):
+        """
+        选择目标文件夹
+        :return:
+        """
         self.target_folder = filedialog.askdirectory()
         if self.target_folder:
             messagebox.showinfo("目标文件夹",
                                 f"已选择目标文件夹: {self.target_folder}")
 
     def process_images(self):
+        """
+        处理图片
+        :return:
+        """
         if not self.source_folders:
             messagebox.showerror("错误", "请至少添加一个源文件夹")
             return
@@ -93,6 +68,11 @@ class ImageProcessorGUI:
             messagebox.showerror("错误", f"处理图片时出错: {str(e)}")
 
     def get_image_date(self, file_path):
+        """
+        获取图片日期
+        :param file_path:
+        :return:
+        """
         try:
             img = Image.open(file_path)
             exif_data = img._getexif()
@@ -117,6 +97,11 @@ class ImageProcessorGUI:
         return datetime.fromtimestamp(os.path.getmtime(file_path))
 
     def get_file_hash(self, file_path):
+        """
+        获取文件哈希值
+        :param file_path:
+        :return:
+        """
         hash_md5 = hashlib.md5()
         with open(file_path, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
@@ -124,6 +109,10 @@ class ImageProcessorGUI:
         return hash_md5.hexdigest()
 
     def collect_and_deduplicate_images(self):
+        """
+        收集并去重图片
+        :return:
+        """
         image_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.bmp')
         collected_images = []
         hash_dict = {}
@@ -133,7 +122,11 @@ class ImageProcessorGUI:
                 for file in files:
                     if file.lower().endswith(image_extensions):
                         source_path = os.path.join(root, file)
-                        file_hash = self.get_file_hash(source_path)
+                        try:
+                            file_hash = self.get_file_hash(source_path)
+                        except Exception as e:
+                            print(f"Error processing {file}: {e}")
+                            continue
 
                         if file_hash not in hash_dict:
                             target_path = os.path.join(self.target_folder, file)
@@ -145,20 +138,25 @@ class ImageProcessorGUI:
                                                            f"{name}_{counter}{ext}")
                                 counter += 1
 
-                            shutil.copy2(source_path, target_path)
-                            collected_images.append(target_path)
-                            hash_dict[file_hash] = target_path
+                            try:
+                                shutil.copy2(source_path, target_path)
+                                collected_images.append(target_path)
+                                hash_dict[file_hash] = target_path
+                            except Exception as e:
+                                print(f"Error copying {file}: {e}")
 
         return collected_images
 
     def rename_images(self, image_files):
+        """
+        重命名图片
+        :param image_files:
+        :return:
+        """
         image_dates = []
         for f in image_files:
-            try:
-                date = self.get_image_date(f)
-                image_dates.append((f, date))
-            except Exception as e:
-                print(f"Error processing {f}: {e}")
+            date = self.get_image_date(f)
+            image_dates.append((f, date))
 
         image_dates.sort(key=lambda x: x[1])
 
@@ -178,11 +176,4 @@ class ImageProcessorGUI:
                 print(f"Failed to rename {old_name}: {e}")
 
 
-def main():
-    root = tk.Tk()
-    ImageProcessorGUI(root)
-    root.mainloop()
 
-
-if __name__ == "__main__":
-    main()
