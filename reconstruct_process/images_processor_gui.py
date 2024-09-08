@@ -13,6 +13,7 @@ from tkinter import filedialog, messagebox, ttk
 from typing import Optional, List, Tuple
 from images_processor import ImageProcessor
 
+
 class ImageProcessorGUI:
     """图片处理器的图形用户界面类。
 
@@ -148,10 +149,3 @@ class ImageProcessorGUI:
             messagebox.showinfo("信息", f"已重命名 {data} 张图片")
         elif event == 'processing_completed':
             messagebox.showinfo("完成", "图片处理完成")
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    root.title("图片处理器")
-    root.geometry("400x300")  # 设置初始窗口大小
-    app = ImageProcessorGUI(root)
-    root.mainloop()

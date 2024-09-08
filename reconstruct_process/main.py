@@ -9,6 +9,7 @@ def main():
     :return:
     """
     root = tk.Tk()
+    root.geometry("400x300")
     ImageProcessorGUI(root)
     root.mainloop()
 
