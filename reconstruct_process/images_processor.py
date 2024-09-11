@@ -240,31 +240,6 @@ class ImageProcessor:
                 source_path, file, collected_images, hash_dict, file_hash
             )
 
-    def _copy_unique_image(
-        self,
-        source_path: str,
-        file: str,
-        collected_images: List[str],
-        hash_dict: Dict[str, str],
-        file_hash: str,
-    ) -> None:
-        """复制唯一的图片到目标文件夹。
-
-        Args:
-            source_path: 源文件路径。
-            file: 文件名。
-            collected_images: 收集的图片列表。
-            hash_dict: 用于去重的哈希字典。
-            file_hash: 文件的哈希值。
-        """
-        target_path = self._get_unique_target_path(file)
-        try:
-            shutil.copy2(source_path, target_path)
-            collected_images.append(target_path)
-            hash_dict[file_hash] = target_path
-        except ImageCopyError as e:
-            raise ImageCopyError(source_path, target_path, str(e))
-
     def _get_unique_target_path(self, file: str) -> str:
         """获取唯一的目标文件路径。
 
@@ -322,3 +297,61 @@ class ImageProcessor:
         """
         time_info = re.search(r"\d{8}_\d{6}", file_name)
         return time_info.group(0) if time_info else date.strftime("%Y%m%d_%H%M%S")
+
+    def _copy_unique_image(
+        self,
+        source_path: str,
+        file: str,
+        collected_images: List[str],
+        hash_dict: Dict[str, str],
+        file_hash: str,
+    ) -> None:
+        """复制唯一的图片到目标文件夹，并添加前缀。
+
+        Args:
+            source_path: 源文件路径。
+            file: 文件名。
+            collected_images: 收集的图片列表。
+            hash_dict: 用于去重的哈希字典。
+            file_hash: 文件的哈希值。
+        """
+        target_path = self._get_unique_target_path(file)
+        if self._is_random_name(file):
+            target_path = self.add_prefix_to_image(source_path, self.target_folder)
+
+        try:
+            shutil.copy2(source_path, target_path)
+            collected_images.append(target_path)
+            hash_dict[file_hash] = target_path
+        except ImageCopyError as e:
+            raise ImageCopyError(source_path, target_path, str(e))
+
+    def add_prefix_to_image(
+        self, file_path: str, target_folder: str, prefix: str = "疑似网图"
+    ) -> str:
+        """为文件名为随机字母和数字组合的图片添加前缀。
+
+        Args:
+            file_path: 图片文件路径。
+            target_folder: 目标文件夹路径。
+            prefix: 要添加的前缀。
+
+        Returns:
+            新的文件路径。
+        """
+        file_name = os.path.basename(file_path)
+        new_name = f"{prefix}_{file_name}"
+        new_path = os.path.join(target_folder, new_name)
+        os.rename(file_path, new_path)
+        return new_path
+
+    def _is_random_name(self, file_name: str) -> bool:
+        """检查文件名是否为随机字母和数字组合。
+
+        Args:
+            file_name: 文件名。
+
+        Returns:
+            如果文件名是随机字母和数字组合则返回True，否则返回False。
+        """
+        return re.match(r"^[a-zA-Z0-9]+$", os.path.splitext(file_name)[0]) is not None
